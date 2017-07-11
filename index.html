@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <!-- Required meta tags-->
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />    
+    <meta charset="utf-8">
+    <meta name="author" content="BeeBole">
+
+    <meta name="viewport" content="width=device-width, height=device-height, maximum-scale=1, minimum-scale=1, user-scalable=no">
+
+    <title>beeBole - Offline demo</title>
+  <style>
+    html {
+      box-sizing: border-box;
+    }
+    img {
+      display: block;
+      margin: 0 auto;
+    }
+    h1, h4 {
+      text-align: center;
+    }
+    .arrow {
+      font-size: 3em;
+      position: absolute;
+    }
+    .arrow.right {
+      float: right;
+      position: relative;
+    }
+  </style>    
+  </head>
+  <body>
+  	<h1> Offline Demo V<span id="appVersion">9</span></h1>
+    <h4> Tired of kitties? What about bunnies? &#128522; </h4>
+    <img src="img/bunny1.jpg" width="340" height="223">
+    <div class="arrow left" onclick="navigate(-1);">&#x25c1;</div>
+    <div class="arrow right" onclick="navigate(1);">&#x25b7;</div>
+    <script charset="UTF-8">
+      function navigate( direction ) {
+        var img = document.querySelector( 'img' ),
+            num = img.getAttribute( 'src' ).split('bunny')[1].charAt(0),
+            next = ( parseInt( num ) + direction ) % 3;
+        img.setAttribute( 'src', 'img/bunny' + ( next ? next : 3 ) + '.jpg');
+      }
+
+      if ( 'serviceWorker' in navigator ) {
+        navigator.serviceWorker.register('sw.js').then(function(registration) {
+          // Registration was successful
+          console.log('ServiceWorker registration successful with scope: ', registration.scope);
+        }).catch(function(err) {
+          // registration failed :(
+          console.log('ServiceWorker registration failed: ', err);
+        });
+
+        //Listen for claiming of our ServiceWorker
+        navigator.serviceWorker.addEventListener('controllerchange', function() {
+          console.log( 'Service worker status changed: ', this.controller.state );
+          // Listen for changes in the state of our ServiceWorker
+          navigator.serviceWorker.controller.addEventListener('statechange', function() {
+            // If the ServiceWorker becomes "activated", let the user know they can go offline!
+            if (this.state === 'activated') {
+                window.location.reload( true );
+            }
+          });
+        });
+
+      } else  if ('applicationCache' in window) {
+        var iframe = document.createElement('iframe');
+        iframe.style.display = 'none';
+        iframe.src = 'load-appcache.html';
+        document.body.appendChild(iframe);
+
+        //Check if a new cache is available on page load.
+        window.addEventListener('load', function( ) {
+          window.applicationCache.addEventListener('updateready', function( ) {
+            if (window.applicationCache.status === window.applicationCache.UPDATEREADY) {
+                window.applicationCache.swapCache();
+                window.location.reload( true );
+            } else {
+              // Manifest didn't changed. Nothing new to server.
+            }
+          }, false);
+
+        }, false);
+
+      }
+    </script>
+	</body>
+</html>
